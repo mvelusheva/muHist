@@ -91,7 +91,20 @@ double invMass = -9.;
   TH2F *hMuon_ptVMuon_etaPlus = new TH2F ("hMuon_ptVMuon_etaPlus", "hMuon_ptVMuon_etaPlus", 100, 0., 100., 50, -5., 5.);
   TH2F *hMuon_ptVMuon_etaMinus = new TH2F ("hMuon_ptVMuon_etaMinus", "hMuon_ptVMuon_etaMinus", 100, 0., 100., 50, -5., 5.);
   
+  
+  
+ 
+ // x: pT на муона (0-200 GeV), y: MET pt (0-200 GeV)
+  TH2F *hMETvsMuonPt = new TH2F("hMETvsMuonPt", "MET vs Muon p_{T} (nMuon == 1);Muon p_{T} [GeV];MET [GeV]", 100, 0, 200, 100, 0, 200);
+  TH2F *hMETvsLeadingMuPt = new TH2F("hMETvsLeadingMuPt", "MET vs Leading Muon p_{T};Leading Muon p_{T} [GeV];MET [GeV]", 100, 0, 200, 100, 0, 200);// leading muon
+  TH2F *hnMuonVMET = new TH2F("hnMuonVMET", "nMuon vs MET;nMuon;MET pt [GeV]", 10, -0.5, 9.5, 100, 0, 200);//METvsnMUons
   TH1F *hMassDifference = new TH1F("hMassDifference", "Difference (Hand - TLorentzVector)", 200, -0.01, 0.01);//Търсим разлика между ТЛоренц и ръчно смятане
+  // Търсим пик около 80 GeV, затова правим обхват до 120-150
+  TH1F *hW_transverseMass = new TH1F("hW_transverseMass", "W Transverse Mass;M_{T} [GeV];Events", 100, 0, 150);// Търсим напречна маса на W-boson
+  TH1F *hW_transverseMass_Lorentz = new TH1F("hW_transverseMass_Lorentz", "W Transverse Mass (TLorentzVector);M_{T} [GeV];Events", 100, 0, 150);//С Тлоренц
+  TH1F *hDiff_TVector_Hand = new TH1F("hDiff_TVector_Hand", "Difference: TVector - Hand;Difference [GeV];Events", 200, -0.0001, 0.0001);//сравнявам твектор и ръзно смятане
+  TH1F *hDiff2_TVector_Lorentz = new TH1F("hDiff2_TVector_Lorentz", "Difference: TVector - Lorentz;Difference [GeV];Events", 200, -0.0001, 0.0001);// сравнявам твектор и тлоренц
+  TH1F *hW_transverseMass_Hand = new TH1F("hW_transverseMassHand", "W Transverse Mass (Hand Calc);M_{T} [GeV];Events", 100, 0, 150);
   TH1F *hDimuon_MassRuka = new TH1F("hDimuon_MassRuka", "Invariant Mass Hand Calc", 300, 0, 150);//Inv mass
   TH1F *hDimuon_mass = new TH1F ("hDimuon_mass", "hDimuon_mass", 300, 0., 150.);
   TH2F *hDimuon_massVMuon_dxy = new TH2F ("hDimuon_massVMuon_dxy", "hDimuon_massVMuon_dxy", 300, 0., 150., 100, -4., 4.);
@@ -104,7 +117,8 @@ double invMass = -9.;
   TH2F *hDimuon_pzVDimuon_mass = new TH2F("hDimuon_pzVDimuon_mass", "hDimuon_pzVDimuon_mass", 2000, -200., 200., 300, 0., 150.);
 ////////////////////////////////////////////////////////////////  
 //Tcanvaces
-TCanvas cnMuon("cnMuon", "nMuon", 800, 600);
+
+/*TCanvas cnMuon("cnMuon", "nMuon", 800, 600);
 TCanvas cMuon_charge("cMuon_charge", "Muon Charge", 800, 600);
 TCanvas cMuon_tightCharge("cMuon_tightCharge", "Muon Tight Charge", 800, 600);
 TCanvas cMuon_pt("cMuon_pt", "Muon pt", 800, 600);
@@ -134,8 +148,8 @@ TCanvas cDimuon_pt("cDimuon_pt", "Dimuon pt", 800, 600); //transverse momentum o
 TCanvas cDimuon_pz("cDimuon_pz", "Dimuon pz", 800, 600); // momentum along z axis
 TCanvas cDimuon_ptVDimuon_mass("cDimuon_ptVDimuon_mass", "Dimuon pt vs Dimuon mass", 800, 600);
 TCanvas cDimuon_pzVDimuon_mass("cDimuon_pzVDimuon_mass", "Dimuon pz vs Dimuon mass", 800, 600);
-//////////////////////////////////////////////////////////////////////
-
+/////////////////////////////////////////////////////////////TLorentzVector/////////
+*/
  //////////////////////////////////////////////////////////////////////
 Int_t nentries = (Int_t)t1->GetEntries();
 cout << "Number of events in the file: " << nentries << endl;
@@ -146,6 +160,56 @@ double myMuon_mass2 = 0.0112;
 for (int i =0; i<nentries; i++){
 //for (int i =0; i<1000; i++){
   t1->GetEntry(i);
+  
+  
+  if (nMuon == 1) {
+  
+    float ptMu = Muon_pt[0]; // Вземаме pT на единствения муон
+        hMETvsMuonPt->Fill(ptMu, MET_pt);
+        
+        
+   // НАпречната маса на w-boson
+    double phiMu  = Muon_phi[0];
+    double met    = MET_pt;
+    double phiMet = MET_phi;
+    double etaMu = Muon_eta[0];
+    const double PI = 3.1415926535;
+    
+//    if (ptMu > 25.0 && met > 25.0) {
+    
+    TLorentzVector mu, nu, W;
+
+   // Залагам Eta = 0 и за муона, и за неутриното
+   mu.SetPtEtaPhiM(ptMu, etaMu, phiMu, 0.105); 
+   nu.SetPtEtaPhiM(met, 0, phiMet, 0); 
+
+   W = mu + nu;
+   double mTW_Lorentz = W.M(); 
+   hW_transverseMass_Lorentz->Fill(mTW_Lorentz);	//ne e transverse
+    
+    double dPhi_TVector = TVector2::Phi_mpi_pi(phiMu - phiMet);
+    double mTW_TVector = sqrt(2 * ptMu * met * (1 - cos(dPhi_TVector)));
+    hW_transverseMass->Fill(mTW_TVector);
+   
+    
+    //Искам да пробвам да сметна напречната маса на ръка също
+        double dPhi_Hand = phiMu - phiMet;
+        while (dPhi_Hand >  PI) dPhi_Hand -= 2 * PI;
+        while (dPhi_Hand < -PI) dPhi_Hand += 2 * PI;
+        
+        double mTW_Hand = sqrt(2 * ptMu * met * (1 - cos(dPhi_Hand)));
+        hW_transverseMass_Hand->Fill(mTW_Hand);
+        
+   // Смятам разликата
+    double diff = mTW_TVector - mTW_Hand;
+    double diff2 = mTW_TVector - mTW_Lorentz;
+    
+    // Пълня хистограмите за разликата
+    hDiff_TVector_Hand->Fill(diff);
+    hDiff2_TVector_Lorentz->Fill(diff2);
+    
+//        }
+    }
   if (nMuon > 0){
     Muon_leadingPt = Muon_pt[0];
     for (UInt_t mu = 1; mu < nMuon; mu++){
@@ -153,16 +217,24 @@ for (int i =0; i<nentries; i++){
         Muon_leadingPt = Muon_pt[mu];
     }
     }
+    hMETvsLeadingMuPt->Fill(Muon_leadingPt, MET_pt);
+  }
+    
+      
+    
+    if(nMuon == 2 && Muon_charge[0] * Muon_charge[1] == -1){
+    
+    double dPhi_mumu = TVector2::Phi_mpi_pi(Muon_phi[0] - Muon_phi[1]);
+    dPhi_mumu = fabs(dPhi_mumu); 
+    
+    hnMuonVMET->Fill(nMuon, MET_pt);
     hMuon_leadingPt->Fill(Muon_leadingPt);
     hnMuonVMuon_leadingPt->Fill(nMuon, Muon_leadingPt);
-  }
-  
-    if(nMuon == 2 && Muon_charge[0] * Muon_charge[1] == -1){
        
        double mu1Et = sqrt(Muon_pt[0]*Muon_pt[0] + Muon_mass[0]*Muon_mass[0]);
        //mu1Et = sqrt(Muon_pt[0]*Muon_pt[0] + myMuon_mass2);
        double mu2Et = sqrt(Muon_pt[1]*Muon_pt[1]+ Muon_mass[1]*Muon_mass[1]);
-       std::cout << "energy transverse muon 1= " << mu1Et << std::endl;
+       //std::cout << "energy transverse muon 1= " << mu1Et << std::endl;
        
        
        
@@ -219,7 +291,7 @@ for (int i =0; i<nentries; i++){
           hMuon_ptVMuon_etaMinus->Fill(Muon_pt[0], Muon_eta[0]);
           hMuon_ptVMuon_etaPlus->Fill(Muon_pt[1], Muon_eta[1]);   
       }
-    }
+          }
 
  
     hnMuon->Fill(nMuon);
@@ -302,6 +374,16 @@ for (int i =0; i<nentries; i++){
     hDimuon_pzVDimuon_mass->Write();
     hDimuon_MassRuka->Write();
     hMassDifference->Write();
+    hnMuonVMET->Write();
+    hMETvsMuonPt->Write();
+    hMETvsLeadingMuPt->Write();
+    hW_transverseMass->Write();
+    hW_transverseMass_Hand->Write();
+    hW_transverseMass_Lorentz->Write();
+    hDiff_TVector_Hand->Write();
+    hDiff2_TVector_Lorentz->Write();
+    
+  
     
     
     fout->cd(""); 
