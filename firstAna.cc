@@ -9,16 +9,20 @@ void firstAna(){
 //TFile *f = TFile::Open("/media/maia/NO_LABEL/data.root");
 //TTree *t1 = (TTree*)f->Get("Events");
 
-const char* fileNames[4] = {"root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011A_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011B_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2012B_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2012C_SingleMu_merged.root"};
+/*const char* fileNames[4] = {"root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011A_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011B_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2012B_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2012C_SingleMu_merged.root"};
 
 const char* fileLabels[4] = {"Run2011A", "Run2011B", "Run2012B", "Run2012C"};
+*/
+
+const char* fileNames[1] = {"root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/MonteCarlo11_Summer11LegDR_DYJetsToLL_M-50_7TeV-madgraph-pythia6-tauola_merged.root"};
+
+const char* fileLabels[1] = {"drellYan"};
+
+TFile *fout = new TFile("my_histograms_test.root", "RECREATE"); 
 
 
-TFile *fout = new TFile("my_histograms.root", "RECREATE"); 
 
-
-
-for (int fileIdx = 0; fileIdx < 4; fileIdx++){
+for (int fileIdx = 0; fileIdx < 1; fileIdx++){
     TString label = fileLabels[fileIdx];
     
     TChain *t1 = new TChain("Events");
@@ -51,6 +55,20 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
     Float_t CaloMET_phi;
     Float_t CaloMET_sumEt;
     Float_t Muon_leadingPt = -1;
+    Int_t nGenPart;
+    Float_t GenPart_mass[5000];
+    Float_t GenPart_pt[5000];
+    Float_t GenPart_eta[5000];
+    Float_t GenPart_phi[5000];
+    Int_t GenPart_pdgId;
+    Int_t GenPart_statusFlags;
+    Int_t GenPart_genPartIdxMother;
+    Int_t GenPart_Id;
+    Int_t GenPart_parpdgId;
+    Float_t Muon_pfRelIso03_all[5000];
+    Float_t Muon_pfRelIso04_all[5000];
+    //Bool_t Muon_isGlobal;
+    
     //Bool_t HLT_DoubleMu3_Jpsi;
     ///////////////////////////////////////////////////////////////////////////
     //Branches
@@ -75,38 +93,53 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
     t1->SetBranchAddress("CaloMET_phi", &CaloMET_phi); //azimuthal angle of MET caught in calorimeter
     t1->SetBranchAddress("CaloMET_sumEt", &CaloMET_sumEt); //scalar sum of transverse energy of met
     //t1->SetBranchAddress("HLT_DoubleMu3_Jpsi", &HLT_DoubleMu3_Jpsi);
+    t1->SetBranchAddress("nGenPart", &nGenPart);
+    t1->SetBranchAddress("GenPart_pt", &GenPart_pt);
+    t1->SetBranchAddress("GenPart_eta", &GenPart_eta);
+    t1->SetBranchAddress("GenPart_phi", &GenPart_phi);
+    t1->SetBranchAddress("GenPart_mass", &GenPart_mass);
+    t1->SetBranchAddress("GenPart_pdgId", &GenPart_pdgId);
+    t1->SetBranchAddress("GenPart_statusFlags", &GenPart_statusFlags);
+    t1->SetBranchAddress("GenPart_genPartIdxMother", &GenPart_genPartIdxMother);
+    t1->SetBranchAddress("GenPart_Id", &GenPart_Id);
+    t1->SetBranchAddress("GenPart_parpdgId", &GenPart_parpdgId);
+    t1->SetBranchAddress("Muon_pfRelIso03_all", &Muon_pfRelIso03_all);
+    t1->SetBranchAddress("Muon_pfRelIso04_all", &Muon_pfRelIso04_all);
+    //t1->SetBranchAddress("Muon_isGlobal", &Muon_isGlobal);
     ///////////////////////////////////////////////////////////////////
     //Histograms definitions
       TH1F *hnMuon = new TH1F("hnMuon", "hnMuon", 50, 0.5, 50.5);
       TH1F *hMuon_charge = new TH1F("hMuon_charge", "hMuon_charge", 3, -1.5, 1.5);
       TH1F *hMuon_tightCharge = new TH1F("hMuon_tightCharge", "hMuon_tightCharge", 5, -1., 4);
-      TH1F *hMuon_pt = new TH1F("hMuon_pt", "hMuon_pt", 100, 0., 100.);
+      
       TH1F *hMuon_ptErr = new TH1F("hMuon_ptErr", "hMuon_ptErr", 200, 0., 2.);
-      TH1F *hMuon_eta = new TH1F("hMuon_eta", "hMuon_eta", 50, -3.4, 3.4);
+      
       TH1F *hMuon_etaAll = new TH1F("hMuon_etaAll", "hMuon_etaAll", 1000, -100., 100.);
-      TH1F *hMuon_phi = new TH1F("hMuon_phi", "hMuon_phi", 50, -5., 5.);
+      TH1F *hMuon_phi = new TH1F("hMuon_phi", "#varphi of #mu", 50, -5., 5.);
       TH1F *hMuon_mass = new TH1F("hMuon_mass", "hMuon_mass", 100, -2., 2.);
-      TH1F *hMuon_dxy = new TH1F("hMuon_dxy", "hMuon_dxy", 100, -4., 4.);
+      TH1F *hMuon_dxy = new TH1F("hMuon_dxy", "Muon dxy", 100, -0.1, 0.1);
       TH1F *hMuon_dxyAll = new TH1F("hMuon_dxyAll", "hMuon_dxyAll", 1000, -100., 100.);
       
-      TH1F *hMET_pt = new TH1F("hMET_pt","hMET_pt", 1000, 0., 100.);
-      TH1F *hMET_phi = new TH1F("hMET_phi", "hMET_phi", 50, -5., 5.);
-      TH1F *hMET_sumEt = new TH1F("hMET_sumEt", "hMET_sumEt", 10000, 0., 1000.);
-      TH1F *hMET_significance = new TH1F("hMET_significance", "hMET_significance", 100, 0., 25.);
-      TH1F *hMET_covXX = new TH1F("hMET_covXX", "hMET_covXX", 100, -0., 50.);
-      TH1F *hMET_covXY = new TH1F("hMET_covXY", "hMET_covXY", 400, -20., 20.);
-      TH1F *hMET_covYY = new TH1F("hMET_covYY", "hMET_covYY", 500, -0., 50.);
-      TH1F *hCaloMET_pt = new TH1F("hCaloMET_pt", "hCaloMET_pt", 250, 0., 50.);
-      TH1F *hCaloMET_phi = new TH1F("hCaloMET_phi", "hCaloMET_phi", 50, -5., 5.);
-      TH1F *hCaloMET_sumEt = new TH1F("hCaloMET_sumEt", "hCaloMET_sumEt", 250, 5., 55.);
+      TH1F *hMET_pt = new TH1F("hMET_pt","MET p_{t}", 1000, 0., 100.);
+      TH1F *hMET_phi = new TH1F("hMET_phi", "MET #varphi", 50, -5., 5.);
+      TH1F *hMET_sumEt = new TH1F("hMET_sumEt", "CaloMET scalar sum of transverse mass", 10000, 0., 1000.);
+      TH1F *hMET_significance = new TH1F("hMET_significance", "MET significance", 100, 0., 25.);
+      TH1F *hMET_covXX = new TH1F("hMET_covXX", "MET covariance XX", 100, -0., 50.);
+      TH1F *hMET_covXY = new TH1F("hMET_covXY", "MET covariance XY", 400, -20., 20.);
+      TH1F *hMET_covYY = new TH1F("hMET_covYY", "MET covariance YY", 500, -0., 50.);
+      TH1F *hCaloMET_pt = new TH1F("hCaloMET_pt", "CaloMET p_{t}", 250, 0., 50.);
+      TH1F *hCaloMET_phi = new TH1F("hCaloMET_phi", "CaloMET #varphi", 50, -5., 5.);
+      TH1F *hCaloMET_sumEt = new TH1F("hCaloMET_sumEt", "CaloMET scalar sum of transverse mass", 250, 5., 55.);
       
       TH1F *hMuon_leadingPt = new TH1F("hMuon_leadingPt", "leading p_{t}", 2000, 0., 200.);
       TH2F *hnMuonVMuon_leadingPt = new TH2F("hnMuonVMuon_leadingPt", "leading p_{t} vs number of muons", 10, -0.5, 9.5, 100, 0., 150.);
+      
+      
       hnMuonVMuon_leadingPt->SetYTitle("leading p_{t} GeV/c");
       hnMuonVMuon_leadingPt->SetXTitle("number of muons");
       
-      TH1F *hMuon_eta1 = new TH1F ("hMuon_eta1", "#eta(#mu#mu)", 800, -4., 4.);
-      TH1F *hMuon_deltaPhi = new TH1F ("hMuon_deltaPhi", "#delta#phi(#mu#mu)", 1256, -6.28, 6.28);
+      
+      TH1F *hMuon_deltaPhi = new TH1F ("hMuon_deltaPhi", "#Delta#varphi(#mu#mu)", 1256, -6.28, 6.28);
       
       TH2F *hMuon_phiVMuon_eta = new TH2F ("hMuon_phiVMuon_eta", "#eta(#mu) vs #phi(#mu)", 50, -5., 5., 50, -5., 5.);
       hMuon_phiVMuon_eta->SetYTitle("#eta(#mu) rad");
@@ -120,30 +153,65 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
       hMuon_ptVMuon_etaMinus->SetYTitle("#eta(#mu_{-}) rad");
       hMuon_ptVMuon_etaMinus->SetXTitle("p_{t}(#mu_{-}) GeV/c");
       
-      TH1F *hDimuon_mass = new TH1F ("hDimuon_mass", "dimuon mass", 3000, 0., 150.);
+      TH1F *hDimuon_mass = new TH1F ("hDimuon_mass", "dimuon mass", 300, 0., 150.);
       TH2F *hDimuon_massVMuon_dxy = new TH2F ("hDimuon_massVMuon_dxy", "dxy(#mu) vs mass #mu#mu", 3000, 0., 150., 100, -4., 4.);
       hDimuon_massVMuon_dxy->SetYTitle("dxy(#mu) m");
       hDimuon_massVMuon_dxy->SetXTitle("dimuon mass GeV/c^{2}");
       
-      TH2F *hMET_significanceVMET_phi = new TH2F ("hMET_significanceVMET_phi", "#phi(MET) vs MET significance", 100, 0., 25., 50, -5., 5.);
-      hMET_significanceVMET_phi->SetYTitle("#phi(MET) rad");
+      TH2F *hMET_significanceVMET_phi = new TH2F ("hMET_significanceVMET_phi", "#varphi(MET) vs MET significance", 100, 0., 25., 50, -5., 5.);
+      hMET_significanceVMET_phi->SetYTitle("#varphi(MET) rad");
       hMET_significanceVMET_phi->SetXTitle("MET significance");
       
-      TH2F *hMuon_deltaPhiVDimuon_mass = new TH2F ("Muon_deltaPhiVDimuon_mass", "mass #mu#mu vs #delta#phi(#mu#mu)", 1256, -6.28, 6.28, 1500, 0., 15.);
+      TH2F *hMuon_deltaPhiVDimuon_mass = new TH2F ("Muon_deltaPhiVDimuon_mass", "mass #mu#mu vs #Delta#varphi(#mu#mu)", 1256, -6.28, 6.28, 1500, 0., 150.);
       hMuon_deltaPhiVDimuon_mass->SetYTitle("mass #mu#mu GeV/c^{2}");
-      hMuon_deltaPhiVDimuon_mass->SetXTitle("#delta#phi(#mu#mu) rad");
+      hMuon_deltaPhiVDimuon_mass->SetXTitle("#Delta#varphi(#mu#mu) rad");
       
       TH1F *hDimuon_pt = new TH1F ("hDimuon_pt", "Dimuon p_{t}", 1000, 0., 200.);
-      TH1F *hDimuon_pz = new TH1F ("hDimuon_pz", "Dimuon p_{z}", 2000, -200., 200.);
+      TH1F *hDimuon_pz = new TH1F ("hDimuon_pz", "Dimuon p_{z}", 800, -200., 200.);
       TH2F *hDimuon_ptVDimuon_mass = new TH2F("hDimuon_ptVDimuon_mass", "mass #mu#mu vs #mu#mu p_{t}", 1000, 0., 200., 300, 0., 150.);
       hDimuon_ptVDimuon_mass->SetYTitle("mass(#mu#mu) GeV/c^{2}");
       hDimuon_ptVDimuon_mass->SetXTitle("P_{t}(#mu#mu) GeV/c");
+      
 
-      TH2F *hDimuon_pzVDimuon_mass = new TH2F("hDimuon_pzVDimuon_mass", "mass (#mu#mu)vs #mu#mu p_{z}", 2000, -200., 200., 300, 0., 150.);
+      TH2F *hDimuon_pzVDimuon_mass = new TH2F("hDimuon_pzVDimuon_mass", "mass #mu#mu vs #mu#mu p_{z}", 800, -200., 200., 300, 0., 150.);
       hDimuon_pzVDimuon_mass->SetYTitle("mass(#mu#mu) GeV/c^{2}");
       hDimuon_pzVDimuon_mass->SetXTitle("P_{t}(#mu#mu) GeV/c");
+      TH1F *hDimuon_transverseMass = new TH1F("hDimuon_transverseMass", "transverse mass of dimuon event", 500, 0., 100.);
       
-      TH1F *hMuon_leadingPtAnalysis = new TH1F("hMuon_leadingPtAnalysis", "leading p_{t}(#mu_{+}) vs leading p_{t}(#mu_{-})", 2000, 0., 200.);
+      
+      /////////////////////////////////////////////////////////////
+      TH1F *hMuon_pt = new TH1F("hMuon_pt", "p_{t} of all muons", 100, 0., 100.);
+      
+      TH2F *hMuon_leadingPtVDimuon_mass = new TH2F("hMuon_leadingPtVDimuon_mass", "leading p_{t} vs mass of #mu#mu event", 750, 0., 150., 1000, 0., 200.);
+      hMuon_leadingPtVDimuon_mass->SetYTitle("leading p_{t} /GeV/c");
+      hMuon_leadingPtVDimuon_mass->SetXTitle("mass of mother particle /GeV/c^{2}");
+      
+      TH1F *hDimuon_phi = new TH1F ("hDimuon_phi", "#varphi of #mu#mu event", 630, -6.3, 6.3);
+      
+      TH2F *hDimuon_cosDeltaPhiVDimuon_mass = new TH2F ("hDimuon_cosDeltaPhiVDimuon_mass", "cos (#Delta#varphi) vs mass of #mu#mu event", 300., 0., 150., 200, -1., 1.);
+      hDimuon_cosDeltaPhiVDimuon_mass->SetYTitle("cos(#Delta#varphi)");
+      hDimuon_cosDeltaPhiVDimuon_mass->SetXTitle("mass of #mu#mu event, Gev/c^{2}");
+      
+      TH1F *hMuon_eta = new TH1F("hMuon_eta", "#eta of all muon events", 340, -2.1, 2.1);
+      TH1F *hDimuon_eta = new TH1F ("hDimuon_eta", "#eta(#mu#mu)", 800, -4., 4.);
+      TH1F *hDimuon_deltaEta = new TH1F ("hDimuon_deltaEta", "#Delta#eta of #mu#mu event", 400, -4, 4);
+      
+      TH2F *hDimuon_etaPlusVetaMinus = new TH2F ("hDimuon_etaPlusVetaMinus", "#eta of #mu_{-} vs #eta of #mu_{+}", 240, -2.4, 2.4, 240, -2.4, 2.4);
+      hDimuon_etaPlusVetaMinus->SetYTitle("#eta of #mu_{-}");
+      hDimuon_etaPlusVetaMinus->SetYTitle("#eta of #mu_{+}");
+      
+      TH1F *hMuon_pfRelIso03_all = new TH1F("hMuon_pfRelIso03_all", "isolation using particle flow - 03", 100, 0., 4.);
+      TH1F *hMuon_pfRelIso04_all = new TH1F("hMuon_pfRelIso04_all", "isolation using particle flow - 04", 100, 0., 4.);
+      TH2F *hMuon_ptVMuon_eta = new TH2F ("hMuon_ptVMuon_eta", "p_{t} against #eta of all #mu events (between 60 and 120 GeV/c^{2})", 400, -2.4, 2.4, 400, 0., 200.);
+      hMuon_ptVMuon_eta->SetXTitle("#eta");
+      hMuon_ptVMuon_eta->SetYTitle("p_{t} / GeV/c");
+      ////////////////////////////////////////////////////////////////////////////////////////
+      TH1F *hnGenPart = new TH1F ("hnGenPart", "number of gen particles in drell yan sim", 1000, 0., 1000.);
+      TH1F *hGenPart_mass = new TH1F ("hGenPart_mass", "mass of gen particles in GeV/c^{2}", 5000., 0., 500.);
+      TH1F *hGenPart_pt = new TH1F ("hGenPart_pt", "gen particles p_{t}", 1000., 0., 200.);
+      TH1F *hGenPart_phi = new TH1F ("hGenPart_phi", "#varphi of gen particles", 630, -6.3, 6.3);
+      TH1F *hGenPart_eta = new TH1F ("hGenPart_eta", "#eta of gen particle events", 240, -2.4, 2.4);
+      
     ////////////////////////////////////////////////////////////////  
       // After creating all histograms, put them in a vector
       std::vector<TH1*> histos = {
@@ -154,12 +222,17 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
           hMET_covXX, hMET_covXY, hMET_covYY,
           hCaloMET_pt, hCaloMET_phi, hCaloMET_sumEt,
           hMuon_leadingPt, hnMuonVMuon_leadingPt,
-          hMuon_eta1, hMuon_deltaPhi, hMuon_phiVMuon_eta,
+          hDimuon_eta, hMuon_deltaPhi, hMuon_phiVMuon_eta,
           hMuon_ptVMuon_etaPlus, hMuon_ptVMuon_etaMinus,
           hDimuon_mass, hDimuon_massVMuon_dxy,
           hMET_significanceVMET_phi, hMuon_deltaPhiVDimuon_mass,
           hDimuon_pt, hDimuon_pz, hDimuon_ptVDimuon_mass,
-          hDimuon_pzVDimuon_mass, hMuon_leadingPtAnalysis
+          hDimuon_pzVDimuon_mass,
+          hDimuon_transverseMass, hMuon_leadingPtVDimuon_mass, 
+          hDimuon_phi, hDimuon_cosDeltaPhiVDimuon_mass, hDimuon_deltaEta, 
+          hDimuon_etaPlusVetaMinus, hnGenPart, hGenPart_mass,
+          hGenPart_pt, hGenPart_phi, hGenPart_eta, hMuon_pfRelIso03_all, 
+          hMuon_pfRelIso04_all, hMuon_ptVMuon_eta
       };
 
   
@@ -205,50 +278,63 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
     //////////////////////////////////////////////////////////////////////
     Int_t nentries = (Int_t)t1->GetEntries();
     cout << "Number of events in the file: " << nentries << endl;
+    
       
-      
-      for(int i = 0; i < 50; i++){
-    //  for (int i = 0; i< nentries; i++){
+     //for (int i = 0; i< nentries; i++){
   
-    //for (int i =0; i<1000; i++){
+     for (int i = 0; i<100000; i++){
       
       t1->GetEntry(i);
-      cout << "before hlt" << endl;
+      bool isZpeak = false;
+      // cout << "before hlt" << endl;
 
-      /*if(!HLT_DoubleMu3_Jpsi){
+     /* if(!HLT_DoubleMu3_Jpsi){
       continue;
       }
-*/
+      
      
-    /* if(!HLT_IsoMu20_eta2p1){
+     if(!HLT_IsoMu20_eta2p1){
      continue;
      }
      */
      
-      cout << "after hlt" << "\t" << i << endl;
+     // cout << "after hlt" << "\t" << i << endl;
+      
       if (nMuon > 0){
         Muon_leadingPt = Muon_pt[0];
         for (UInt_t mu = 1; mu < nMuon; mu++){
           if (Muon_pt[mu] > Muon_leadingPt){
             Muon_leadingPt = Muon_pt[mu];  
-        }
-        }
-        if (Muon_leadingPt > 30){
-        hMuon_leadingPt->Fill(Muon_leadingPt);
-        }
+          }
+        }      
         
         hnMuonVMuon_leadingPt->Fill(nMuon, Muon_leadingPt);
       }
       
         if(nMuon == 2 && Muon_charge[0] * Muon_charge[1] == -1){
-           double Muon_deltaPhi = Muon_phi[0] - Muon_phi[1];
-           hMuon_eta1->Fill(Muon_eta[0]);
-           hMuon_eta1->Fill(Muon_eta[1]);
+           double Muon_deltaPhi, etaPlus, etaMinus, Dimuon_deltaEta;
+           if (Muon_charge[0] < 0){
+              Muon_deltaPhi = Muon_phi[0] - Muon_phi[1];
+              Dimuon_deltaEta = Muon_eta[0] - Muon_eta[1];
+              etaMinus = Muon_eta[0];
+              etaPlus = Muon_eta[1];
+           } else {
+              Muon_deltaPhi = Muon_phi[1] - Muon_phi[0];
+              Dimuon_deltaEta = Muon_eta[1] - Muon_eta[0];
+              etaPlus = Muon_eta[0];
+              etaMinus = Muon_eta[1];    
+          }
            hMuon_deltaPhi->Fill(Muon_deltaPhi);
            hMuon_phiVMuon_eta->Fill(Muon_phi[0], Muon_eta[0]);
            hMuon_phiVMuon_eta->Fill(Muon_phi[1], Muon_eta[1]);
-           hMuon_leadingPtAnalysis->Fill(Muon_pt[0]);
-           hMuon_leadingPtAnalysis->Fill(Muon_pt[1]);
+           hDimuon_eta->Fill(Muon_eta[0]);
+           hDimuon_eta->Fill(Muon_eta[1]);
+           hDimuon_deltaEta->Fill(Dimuon_deltaEta);
+           
+           double cosDeltaPhi = TMath::Cos(Muon_deltaPhi);
+           
+           
+          
            
            /////////////////////////////////
            TLorentzVector mu1, mu2, dimuon;
@@ -256,10 +342,13 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
            mu2.SetPtEtaPhiM(Muon_pt[1], Muon_eta[1], Muon_phi[1], Muon_mass[1]);
            dimuon = mu1 + mu2;
            
+          
            double dimuon_pt = dimuon.Pt();
            double dimuon_pz = dimuon.Pz();
            
-          
+           double dimuon_mt = TMath::Sqrt(2.0*Muon_pt[0]*Muon_pt[1]*(1-TMath::Cos(Muon_deltaPhi)));
+           hDimuon_transverseMass->Fill(dimuon_mt);
+           
            hDimuon_mass->Fill(dimuon.M());
            hDimuon_massVMuon_dxy->Fill(dimuon.M(), Muon_dxy[0]);
            hDimuon_massVMuon_dxy->Fill(dimuon.M(), Muon_dxy[1]);
@@ -268,6 +357,19 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
            hDimuon_pz->Fill(dimuon.Pz());
            hDimuon_ptVDimuon_mass->Fill(dimuon.Pt(), dimuon.M());
            hDimuon_pzVDimuon_mass->Fill(dimuon.Pz(), dimuon.M());
+           hDimuon_phi->Fill(dimuon.Phi());
+           hDimuon_cosDeltaPhiVDimuon_mass->Fill(dimuon.M(), cosDeltaPhi);
+           hMuon_leadingPtVDimuon_mass->Fill(dimuon.M(), Muon_leadingPt);
+
+      
+           
+           
+           
+           
+           if (dimuon.M() > 60. && dimuon.M() < 120.){
+              isZpeak = true;
+              hDimuon_etaPlusVetaMinus->Fill(etaPlus, etaMinus);
+           }
            
            
            if (Muon_charge[0] > 0){
@@ -296,6 +398,16 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
       hCaloMET_phi->Fill(CaloMET_phi);
       hCaloMET_sumEt->Fill(CaloMET_sumEt);
       hMET_significanceVMET_phi->Fill(MET_significance, MET_phi);
+      hnGenPart->Fill(nGenPart);
+      
+      for (Int_t gp = 0; gp < nGenPart; gp++){
+           hGenPart_mass->Fill(GenPart_mass[gp]);
+           hGenPart_phi->Fill(GenPart_phi[gp]);
+           hGenPart_eta->Fill(GenPart_eta[gp]);
+           hGenPart_pt->Fill(GenPart_pt[gp]);
+      }
+      
+      
     //  cout << i << ": number of muons = " << nMuon << endl;
       for(UInt_t mu = 0; mu < nMuon; mu++){
     //    cout << "in muon loop; mu = " << mu << "\ti = " << i << endl;
@@ -310,7 +422,12 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
         hMuon_mass->Fill(Muon_mass[mu]);
         hMuon_dxy->Fill(Muon_dxy[mu]);
         hMuon_dxyAll->Fill(Muon_dxy[mu]);
+        hMuon_pfRelIso03_all->Fill(Muon_pfRelIso03_all[mu]);
+        hMuon_pfRelIso04_all->Fill(Muon_pfRelIso04_all[mu]);
         
+        if (isZpeak){
+              hMuon_ptVMuon_eta->Fill(Muon_eta[mu], Muon_pt[mu]);
+        }
         
         }
     }   
@@ -485,21 +602,21 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
         
       ///////////////////////////////////////////////
       //saving all info in file
- 
+        TH1D *hDimuon_cosDeltaPhi = hDimuon_cosDeltaPhiVDimuon_mass->ProjectionY("hDimuon_cosDeltaPhi");
+        
         fout->mkdir(label + "/muHist");
         fout->mkdir(label + "/METHist");
         fout->mkdir(label + "/CaloMETHist");
         fout->mkdir(label + "/anaHist");
-        
+        fout->mkdir(label + "/finalHist");
+        fout->mkdir(label + "/genHist");
 
         fout->cd(label + "/muHist");
         hnMuon->Write();
         hMuon_dxy->Write();
         hMuon_charge->Write();
         hMuon_tightCharge->Write();
-        hMuon_pt->Write();
         hMuon_ptErr->Write();
-        hMuon_eta->Write();
         hMuon_phi->Write();
         hMuon_mass->Write();
       
@@ -520,7 +637,6 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
         
         fout->cd(label + "/anaHist");
         hMuon_leadingPt->Write();
-        hMuon_eta1->Write();
         hMuon_deltaPhi->Write();
         hMuon_phiVMuon_eta->Write();
         hMuon_ptVMuon_etaPlus->Write();
@@ -533,13 +649,82 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
         hDimuon_pz->Write();
         hDimuon_ptVDimuon_mass->Write();
         hDimuon_pzVDimuon_mass->Write();
-        hMuon_leadingPtAnalysis->Write();
-       
+        hDimuon_transverseMass->Write();
+        
+        fout->cd(label + "/finalHist");
+        hMuon_pt->Write();
+        hMuon_leadingPtVDimuon_mass->Write();
+        hDimuon_phi->Write();
+        hDimuon_cosDeltaPhi->Write();
+        hDimuon_cosDeltaPhiVDimuon_mass->Write();
+        hDimuon_eta->Write();
+        hMuon_eta->Write();
+        hDimuon_deltaEta->Write();
+        hDimuon_etaPlusVetaMinus->Write();
+        hMuon_ptVMuon_eta->Write();
+        hMuon_pfRelIso03_all->Write();
+        hMuon_pfRelIso04_all->Write();
+        
+        fout->cd(label + "/genHist");
+        hnGenPart->Write();
+        hGenPart_mass->Write();
+        hGenPart_pt->Write();
+        hGenPart_phi->Write();
+        hGenPart_eta->Write();
+        ////////////////////////////////////////////////////////////////////
+       /* Int_t bin1 = hMuon_deltaPhi->FindBin(2.0);
+        Int_t bin2 = hMuon_deltaPhi->FindBin(4.0);
+        
+        double integral_inside = hMuon_deltaPhi->Integral(bin1, bin2);
+        double integral_total = hMuon_deltaPhi->Integral(0, hMuon_deltaPhi->GetNbinsX() + 1);
+        cout << "entries in interval [2, 4]: " << integral_inside << endl;
+        cout << "entries along whole domain: " << integral_total << endl;
+        cout << "percent cut off when restricting domain to [2, 4]: " << (1 - integral_inside/integral_total) * 100 << "%" << endl;
+        */
+        ////////////////////////////////////////////////////////////////////
+        
+        Int_t xBin1 = hMuon_leadingPtVDimuon_mass->GetXaxis()->FindBin(60.);
+        Int_t xBin2 = hMuon_leadingPtVDimuon_mass->GetXaxis()->FindBin(120.);
+        Int_t yBin1 = hMuon_leadingPtVDimuon_mass->GetYaxis()->FindBin(30.);
+        Int_t yBin2 = hMuon_leadingPtVDimuon_mass->GetNbinsY();
+        
+        double integral_inside = hMuon_leadingPtVDimuon_mass->Integral(xBin1, xBin2, yBin1, yBin2);
+        double integral_total = hMuon_leadingPtVDimuon_mass->Integral(0, hMuon_leadingPtVDimuon_mass->GetNbinsX() + 1, 0, hMuon_leadingPtVDimuon_mass->GetNbinsY() + 1);
+        
+        double percent_cut = (1. - integral_inside / integral_total) * 100;
+        
+        cout << "entries in total region of leading pt vs dimuon mass: " << integral_total << endl;
+        cout << "entries when we restrict mass to between 60 to 120 GeV/c^2 and pt to above 30GeV/c " << integral_inside << endl;
+        cout << "percent lost: " << percent_cut << "%" << endl;
+        
+        /////////////////////////////////////////////////////////
+        Int_t xBins1 = hDimuon_cosDeltaPhiVDimuon_mass->GetXaxis()->FindBin(60.);
+        Int_t xBins2 = hDimuon_cosDeltaPhiVDimuon_mass->GetXaxis()->FindBin(120.);
+        
+        double integral_full = hDimuon_cosDeltaPhiVDimuon_mass->Integral(0, hDimuon_cosDeltaPhiVDimuon_mass->GetNbinsX() + 1, 0, hDimuon_cosDeltaPhiVDimuon_mass->GetNbinsY() + 1);
+        double cuts[3] = {-0.4, -0.6, -0.8};
+        
+        for(int c = 0; c < 3; c++){
+            Int_t yBins1 = hDimuon_cosDeltaPhiVDimuon_mass->GetYaxis()->FindBin(-1.);
+            Int_t yBins2 = hDimuon_cosDeltaPhiVDimuon_mass->GetYaxis()->FindBin(cuts[c]);
+            
+            double integral_partial = hDimuon_cosDeltaPhiVDimuon_mass->Integral(xBins1, xBins2, yBins1, yBins2);
+            double percent_cutOff = (1. - integral_partial / integral_full) * 100;
+            
+            cout << "entries of cos(dphi) vs dimuon mass along full domain: " << integral_full << endl;
+            cout << "entries when restricting mass to 60-120GeV/c^2 and cos(dphi) from (-1, " << cuts[c] << ") are:"<< integral_partial << endl;
+            cout << "percent cut off: " << percent_cutOff << "%" << endl;
+            
+        }
+        /////////////////////////////////////////////////////////////////
+        
         fout->cd("");
         for (auto* h : histos) delete h;
         delete t1;
+        delete hDimuon_cosDeltaPhi;
         
     }
+        
         
         ///////////////////////////////////////////////
         /*
@@ -567,7 +752,7 @@ for (int fileIdx = 0; fileIdx < 4; fileIdx++){
         
         */
         
-        
+
         
         fout->Close();
 
