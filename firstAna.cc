@@ -1,10 +1,6 @@
 #include <algorithm>
 #include <functional>
 
-const Int_t kIsLastCopy = (1 << 13);
-bool isLastCopyFlag(Int_t statusFlags){
-    return (statusFlags & kIsLastCopy) == kIsLastCopy;
-}
 
 void firstAna(){
 
@@ -66,20 +62,14 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
     Float_t GenPart_eta[5000];
     Float_t GenPart_phi[5000];
     Int_t GenPart_pdgId[5000];
+    Int_t GenPart_status[5000];
     Int_t GenPart_statusFlags[5000];
     Int_t GenPart_genPartIdxMother[5000];
     Int_t GenPart_Id[5000];
     Int_t GenPart_parpdgId[5000];
     Float_t Muon_pfRelIso03_all[5000];
     Float_t Muon_pfRelIso04_all[5000];
-    //Bool_t Muon_isGlobal;
-    
-    //Bool_t HLT_DoubleMu3_Jpsi;
-    
-    
-    
-    
-    
+      
     ///////////////////////////////////////////////////////////////////////////
     //Branches
 
@@ -109,13 +99,14 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
     t1->SetBranchAddress("GenPart_phi", &GenPart_phi);
     t1->SetBranchAddress("GenPart_mass", &GenPart_mass);
     t1->SetBranchAddress("GenPart_pdgId", &GenPart_pdgId);
+    t1->SetBranchAddress("GenPart_status", &GenPart_status);
     t1->SetBranchAddress("GenPart_statusFlags", &GenPart_statusFlags);
     t1->SetBranchAddress("GenPart_genPartIdxMother", &GenPart_genPartIdxMother);
     t1->SetBranchAddress("GenPart_Id", &GenPart_Id);
     t1->SetBranchAddress("GenPart_parpdgId", &GenPart_parpdgId);
     t1->SetBranchAddress("Muon_pfRelIso03_all", &Muon_pfRelIso03_all);
     t1->SetBranchAddress("Muon_pfRelIso04_all", &Muon_pfRelIso04_all);
-    //t1->SetBranchAddress("Muon_isGlobal", &Muon_isGlobal);
+    
     ///////////////////////////////////////////////////////////////////
     //Histograms definitions
     
@@ -240,7 +231,9 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       TH1F *hGenPart_phi = new TH1F ("hGenPart_phi", "#varphi of gen particles", 130, -6.5, 6.5);
       TH1F *hGenPart_eta = new TH1F ("hGenPart_eta", "#eta of gen particle events", 50, -2.5, 2.5);
       TH1F *hGenPart_ZMass = new TH1F("hGenPart_ZMass", "mass of gen particles with id = 23 and flag isLastCopy", 300, 0., 150.);
-      TH1F *hGenPart_dimuonMass = new TH1F("hGen_dimuonMass", "mass of dimuon event of gen particles with id = 13 and id = -13 and flag isLastCopy", 300, 0., 150.);
+      TH1F *hGenPart_dimuonMass = new TH1F("hGenPart_dimuonMass", "mass of dimuon event of gen particles with id = 13 and id = -13 and flag isLastCopy", 300, 0., 150.);
+      TH1F *hGenPart_idxMother = new TH1F("hGenPart_idxMother", "idx of mother particle of dimuon event - gen level", 3000, 0., 3000.);
+      
     ////////////////////////////////////////////////////////////////  
       // After creating all histograms, put them in a vector
       std::vector<TH1*> histos = {
@@ -264,8 +257,8 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
           hMuon_iso4, hMuon_ptVMuon_eta, hDimuon_cosDeltaPhi, 
           hMuon_iso3VDimuon_mass, hMuon_iso4VDimuon_mass, 
           hDimuon_rapidity, hMET_ptVDimuon_transverseMass, 
-          hGenPart_ZMass, hGenPart_dimuonMass
-          
+          hGenPart_ZMass, hGenPart_dimuonMass, hGenPart_idxMother
+	            
       };
 
   
@@ -281,7 +274,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       
      //for (int i = 0; i< nentries; i++){
   
-      for (int i = 0; i<100000; i++){
+      for (int i = 0; i<1000000; i++){
       
       t1->GetEntry(i);
       bool isZpeak = false;
@@ -450,32 +443,51 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
            hGenPart_mass->Fill(GenPart_mass[gp]);
            hGenPart_phi->Fill(GenPart_phi[gp]);
            hGenPart_eta->Fill(GenPart_eta[gp]);
-           hGenPart_pt->Fill(GenPart_pt[gp]);
-           
-           
+           hGenPart_pt->Fill(GenPart_pt[gp]);          
+        
+        
            /////MASS DISTRIBUTION USING GEN PARTICLES//////////////////////
-           bool isLastCopy = isLastCopyFlag(GenPart_statusFlags[gp]);
-           
-           if(GenPart_pdgId[gp] == 23 && isLastCopy){
+                      
+           if(GenPart_pdgId[gp] == 23 && GenPart_status[gp] == 2){
               hGenPart_ZMass->Fill(GenPart_mass[gp]);
            }
            
-           if(GenPart_pdgId[gp] == 13 && isLastCopy && idxMuMinus < 0){
-              idxMuMinus = gp;
+           if(GenPart_pdgId[gp] == 13 && GenPart_status[gp] == 1 && idxMuMinus < 0){
+              	 idxMuMinus = gp;
            }
            
-           if(GenPart_pdgId[gp] == -13 && isLastCopy && idxMuPlus < 0){
+           if(GenPart_pdgId[gp] == -13 && GenPart_status[gp] == 1 && idxMuPlus < 0){
+              
               idxMuPlus = gp;
            }         
       }   
-      
+      //cout << 0 << endl;
       if(idxMuMinus >= 0 && idxMuPlus >= 0){
+      //cout << 1 << endl;
           TLorentzVector genMuMinus, genMuPlus, genDimuon;
           genMuMinus.SetPtEtaPhiM(GenPart_pt[idxMuMinus], GenPart_eta[idxMuMinus], GenPart_phi[idxMuMinus], GenPart_mass[idxMuMinus]);
           genMuPlus.SetPtEtaPhiM(GenPart_pt[idxMuPlus], GenPart_eta[idxMuPlus], GenPart_phi[idxMuPlus], GenPart_mass[idxMuPlus]);
-          genDimuon = genMuMinus + genMuPlus;
-          hGenPart_dimuonMass->Fill(genDimuon.M());
+          genDimuon = genMuMinus + genMuPlus; 
+          double massDimuonGen = genDimuon.M();       
+          hGenPart_idxMother->Fill(GenPart_genPartIdxMother[idxMuMinus]);
+          hGenPart_idxMother->Fill(GenPart_genPartIdxMother[idxMuPlus]);
+          //cout << GenPart_genPartIdxMother[idxMuMinus] << endl;
+          //cout << GenPart_genPartIdxMother[idxMuPlus] << endl;
+          //cout << 2 << endl;
+          
+          int momIdxMinus = GenPart_genPartIdxMother[idxMuMinus];
+          int momIdxPlus = GenPart_genPartIdxMother[idxMuPlus];
+          
+          //cout << 3 << endl;
+          if(GenPart_pdgId[momIdxMinus] == 23 && GenPart_pdgId[momIdxPlus] == 23){
+          	hGenPart_dimuonMass->Fill(massDimuonGen);
+          }
+          
+          
+         
+         
       }
+      
    }     
       ///////////////////////////////////////////////
       //saving all info in file
@@ -554,6 +566,8 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         hGenPart_eta->Write();
         hGenPart_ZMass->Write();
         hGenPart_dimuonMass->Write();
+        hGenPart_idxMother->Write();
+        
         ////////////////////////////////////////////////////////////////////
        /* Int_t bin1 = hMuon_deltaPhi->FindBin(2.0);
         Int_t bin2 = hMuon_deltaPhi->FindBin(4.0);
@@ -566,6 +580,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         */
         ////////////////////////////////////////////////////////////////////
         
+        /*
         Int_t xBin1 = hMuon_leadingPtVDimuon_mass->GetXaxis()->FindBin(60.);
         Int_t xBin2 = hMuon_leadingPtVDimuon_mass->GetXaxis()->FindBin(120.);
         Int_t yBin1 = hMuon_leadingPtVDimuon_mass->GetYaxis()->FindBin(30.);
@@ -599,6 +614,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
             cout << "percent cut off: " << percent_cutOff << "%" << endl;
             
         }
+        */
         /////////////////////////////////////////////////////////////////
         
         fout->cd("");
@@ -635,9 +651,9 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         */
         
 
-        
+        fout->Write();
         fout->Close(); 
-
+        
     }
 
 
