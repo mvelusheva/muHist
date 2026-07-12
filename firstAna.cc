@@ -232,7 +232,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       TH1F *hGenPart_eta = new TH1F ("hGenPart_eta", "#eta of gen particle events", 50, -2.5, 2.5);
       TH1F *hGenPart_ZMass = new TH1F("hGenPart_ZMass", "mass of gen particles with id = 23 and flag isLastCopy", 300, 0., 150.);
       TH1F *hGenPart_dimuonMass = new TH1F("hGenPart_dimuonMass", "mass of dimuon event of gen particles with id = 13 and id = -13 and flag isLastCopy", 300, 0., 150.);
-      TH1F *hGenPart_idxMother = new TH1F("hGenPart_idxMother", "idx of mother particle of dimuon event - gen level", 3000, 0., 3000.);
+      TH1F *hGenPart_muMomPdgId = new TH1F("hGenPart_muMomPdgId", "pdgId of muon mother particle - gen level", 3000, 0., 3000.);
       
     ////////////////////////////////////////////////////////////////  
       // After creating all histograms, put them in a vector
@@ -257,7 +257,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
           hMuon_iso4, hMuon_ptVMuon_eta, hDimuon_cosDeltaPhi, 
           hMuon_iso3VDimuon_mass, hMuon_iso4VDimuon_mass, 
           hDimuon_rapidity, hMET_ptVDimuon_transverseMass, 
-          hGenPart_ZMass, hGenPart_dimuonMass, hGenPart_idxMother
+          hGenPart_ZMass, hGenPart_dimuonMass, hGenPart_muMomPdgId
 	            
       };
 
@@ -274,7 +274,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       
      //for (int i = 0; i< nentries; i++){
   
-      for (int i = 0; i<1000000; i++){
+      for (int i = 0; i<100000; i++){
       
       t1->GetEntry(i);
       bool isZpeak = false;
@@ -436,32 +436,64 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         
         }
         ///////////////////////////////////STING ZONE////////////////////////////////////////////////
-        int idxMuMinus = -1;
-        int idxMuPlus = -1;
-           
+//        int idxMuMinus = -1;
+//        int idxMuPlus = -1;
+        TLorentzVector genMuMinus, genMuPlus, genDimuon;
+        double massDimuonGen = -99.;
+        int momIdxMinus = -99;	//enumeration index in the event of the mother particle of mu-
+        int momIdxPlus = -99;  //enumeration index in the event of the mother particle of mu+
+        int momPdgIdMinus = -99;  //pdg id of the mother particle of mu-
+        int momPdgIdPlus = -99;  //pdg id of the mother particle of mu+
+
         for (Int_t gp = 0; gp < nGenPart; gp++){
-           hGenPart_mass->Fill(GenPart_mass[gp]);
-           hGenPart_phi->Fill(GenPart_phi[gp]);
-           hGenPart_eta->Fill(GenPart_eta[gp]);
-           hGenPart_pt->Fill(GenPart_pt[gp]);          
-        
-        
+           hGenPart_mass->Fill(GenPart_mass[gp]);	//mass of any generated particle
+           hGenPart_phi->Fill(GenPart_phi[gp]);		// phi of any generated particle
+           hGenPart_eta->Fill(GenPart_eta[gp]);		//eta of any generated particle
+           hGenPart_pt->Fill(GenPart_pt[gp]);		//pt of any generated particle
+
            /////MASS DISTRIBUTION USING GEN PARTICLES//////////////////////
-                      
+
            if(GenPart_pdgId[gp] == 23 && GenPart_status[gp] == 2){
               hGenPart_ZMass->Fill(GenPart_mass[gp]);
            }
-           
+
+           if (GenPart_status[gp] == 3){
+             hGenPart_muMomPdgId->Fill(GenPart_pdgId[GenPart_genPartIdxMother[gp]]);
+           }
+
+           if(GenPart_pdgId[gp] == 13 && GenPart_status[gp] == 3){
+             genMuMinus.SetPtEtaPhiM(GenPart_pt[gp], GenPart_eta[gp], GenPart_phi[gp], GenPart_mass[gp]);
+             momIdxMinus = GenPart_genPartIdxMother[gp];
+             momPdgIdMinus = GenPart_pdgId[momIdxMinus];
+//             hGenPart_muMomPdgId->Fill(momPdgIdMinus);
+           }
+
+           if(GenPart_pdgId[gp] == -13 && GenPart_status[gp] == 3){
+             genMuPlus.SetPtEtaPhiM(GenPart_pt[gp], GenPart_eta[gp], GenPart_phi[gp], GenPart_mass[gp]);
+             momIdxPlus = GenPart_genPartIdxMother[gp];
+             momPdgIdPlus = GenPart_pdgId[momIdxPlus];
+//             hGenPart_muMomPdgId->Fill(momPdgIdPlus);
+           }
+           genDimuon = genMuMinus + genMuPlus;
+           if(momPdgIdMinus == 23 && momPdgIdPlus==23){
+             massDimuonGen = genDimuon.M();
+             //cout << "massDimuonGen: " << massDimuonGen << endl;
+             hGenPart_dimuonMass->Fill(massDimuonGen);
+           }
+         }
+/*
            if(GenPart_pdgId[gp] == 13 && GenPart_status[gp] == 1 && idxMuMinus < 0){
               	 idxMuMinus = gp;
            }
-           
+
            if(GenPart_pdgId[gp] == -13 && GenPart_status[gp] == 1 && idxMuPlus < 0){
-              
+
               idxMuPlus = gp;
-           }         
-      }   
+           }
+      }
+*/
       //cout << 0 << endl;
+/*
       if(idxMuMinus >= 0 && idxMuPlus >= 0){
       //cout << 1 << endl;
           TLorentzVector genMuMinus, genMuPlus, genDimuon;
@@ -482,13 +514,9 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
           if(GenPart_pdgId[momIdxMinus] == 23 && GenPart_pdgId[momIdxPlus] == 23){
           	hGenPart_dimuonMass->Fill(massDimuonGen);
           }
-          
-          
-         
-         
       }
-      
-   }     
+*/
+   }
       ///////////////////////////////////////////////
       //saving all info in file
        
@@ -566,7 +594,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         hGenPart_eta->Write();
         hGenPart_ZMass->Write();
         hGenPart_dimuonMass->Write();
-        hGenPart_idxMother->Write();
+        hGenPart_muMomPdgId->Write();
         
         ////////////////////////////////////////////////////////////////////
        /* Int_t bin1 = hMuon_deltaPhi->FindBin(2.0);
@@ -655,10 +683,3 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         fout->Close(); 
         
     }
-
-
-
-
-
-
-
