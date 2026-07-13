@@ -19,7 +19,7 @@ const char* fileNames[1] = {"root://eospublic.cern.ch//eos/opendata/cms/derived-
 
 const char* fileLabels[1] = {"drellYan"};
 
-TFile *fout = new TFile("my_histograms_test.root", "RECREATE"); 
+TFile *fout = new TFile("my_histograms_cut.root", "RECREATE"); 
 
 
 
@@ -45,6 +45,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
     Float_t Muon_phi[1000];
     Float_t Muon_mass[1000];
     Float_t Muon_dxy[1000]; 
+    Float_t Muon_dz[1000];
     Float_t MET_pt;
     Float_t MET_phi;
     Float_t MET_sumEt;
@@ -82,6 +83,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
     t1->SetBranchAddress("Muon_phi", &Muon_phi); //azimuthal angle of muon trajectory - horizontal compass direction 
     t1->SetBranchAddress("Muon_mass", &Muon_mass); // mass of muons
     t1->SetBranchAddress("Muon_dxy", &Muon_dxy);	//dxy - otklonenie spriamo interaction point v ravninata XY
+    t1->SetBranchAddress("Muon_dz", &Muon_dz);
     t1->SetBranchAddress("MET_pt", &MET_pt); //transverse momentum of missing energy transfers
     t1->SetBranchAddress("MET_phi", &MET_phi); //azimuthal angle of MET
     t1->SetBranchAddress("MET_sumEt", &MET_sumEt); //scalar sum of transverse energy of METs
@@ -119,8 +121,9 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       TH1F *hMuon_phi = new TH1F("hMuon_phi", "#varphi of #mu", 100, -5., 5.);
       TH1F *hMuon_mass = new TH1F("hMuon_mass", "hMuon_mass", 40, -2., 2.);
       TH1F *hMuon_dxy = new TH1F("hMuon_dxy", "Muon dxy", 2, -0.1, 0.1);
-      TH1F *hMuon_dxyAll = new TH1F("hMuon_dxyAll", "hMuon_dxyAll", 200, -100., 100.);
-      
+      TH1F *hMuon_dxyAll = new TH1F("hMuon_dxyAll", "dxy of all muons", 200, -100., 100.);
+      TH1F *hMuon_dz = new TH1F("hMuon_dz", "dz of all muons", 200, -100., 100.);
+    
     /////////MET///////////////////////// 
       TH1F *hMET_pt = new TH1F("hMET_pt","MET p_{t}", 1000, 0., 100.);
       TH1F *hMET_phi = new TH1F("hMET_phi", "MET #varphi", 50, -5., 5.);
@@ -239,7 +242,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       std::vector<TH1*> histos = {
           hnMuon, hMuon_charge, hMuon_tightCharge,
           hMuon_pt, hMuon_ptErr, hMuon_eta, hMuon_etaAll,
-          hMuon_phi, hMuon_mass, hMuon_dxy, hMuon_dxyAll,
+          hMuon_phi, hMuon_mass, hMuon_dxy, hMuon_dxyAll, hMuon_dz,
           hMET_pt, hMET_phi, hMET_sumEt, hMET_significance,
           hMET_covXX, hMET_covXY, hMET_covYY,
           hCaloMET_pt, hCaloMET_phi, hCaloMET_sumEt,
@@ -274,7 +277,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       
      //for (int i = 0; i< nentries; i++){
   
-      for (int i = 0; i<100000; i++){
+      for (int i = 0; i<300000; i++){
       
       t1->GetEntry(i);
       bool isZpeak = false;
@@ -307,16 +310,22 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       
       //////////////////////////////////////////////////////////////////////////////////////////////////
         if(nMuon == 2 && Muon_charge[0] * Muon_charge[1] == -1){
-           /*const double ptCut = 25.0;
+           const double ptCut = 25.0;
            const double etaMax = 2.1;
            const double isoCut = 0.1;
+           const double dxy = 0.1;
+           const double dz = 15;
+           
            
            if (Muon_pt[0] <= ptCut || Muon_pt[1] <= ptCut) continue;
            
            if (fabs(Muon_eta[0]) >= etaMax || fabs(Muon_eta[1]) >= etaMax) continue;
            
            if (Muon_pfRelIso04_all[0] > isoCut || Muon_pfRelIso04_all[1] > isoCut) continue;
-           */
+           
+           if (fabs(Muon_dxy[0]) >= dxy || fabs(Muon_dxy[1]) >= dxy) continue;
+           
+           if (fabs(Muon_dz[0]) >= dz || fabs(Muon_dz[1]) >= dz) continue;
            
            double Muon_deltaPhi, etaPlus, etaMinus, Dimuon_deltaEta;        
            
@@ -343,6 +352,8 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
            
            double cosDeltaPhi = TMath::Cos(Muon_deltaPhi);
            hDimuon_cosDeltaPhi->Fill(cosDeltaPhi);
+           
+           if (fabs(cosDeltaPhi) >= 0.8) continue;
            
            TLorentzVector mu1, mu2, dimuon;
            mu1.SetPtEtaPhiM(Muon_pt[0], Muon_eta[0], Muon_phi[0], Muon_mass[0]);
@@ -425,6 +436,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         hMuon_phi->Fill(Muon_phi[mu]);
         hMuon_mass->Fill(Muon_mass[mu]);
         hMuon_dxy->Fill(Muon_dxy[mu]);
+        hMuon_dz->Fill(Muon_dz[mu]);
         hMuon_dxyAll->Fill(Muon_dxy[mu]);
         hMuon_iso3->Fill(Muon_pfRelIso03_all[mu]);
         hMuon_iso4->Fill(Muon_pfRelIso04_all[mu]);
@@ -435,9 +447,8 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         }
         
         }
-        ///////////////////////////////////STING ZONE////////////////////////////////////////////////
-//        int idxMuMinus = -1;
-//        int idxMuPlus = -1;
+        ///////////////////////////////////GEN ANALYSIS////////////////////////////////////////////////
+
         TLorentzVector genMuMinus, genMuPlus, genDimuon;
         double massDimuonGen = -99.;
         int momIdxMinus = -99;	//enumeration index in the event of the mother particle of mu-
@@ -465,15 +476,14 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
              genMuMinus.SetPtEtaPhiM(GenPart_pt[gp], GenPart_eta[gp], GenPart_phi[gp], GenPart_mass[gp]);
              momIdxMinus = GenPart_genPartIdxMother[gp];
              momPdgIdMinus = GenPart_pdgId[momIdxMinus];
-//             hGenPart_muMomPdgId->Fill(momPdgIdMinus);
            }
 
            if(GenPart_pdgId[gp] == -13 && GenPart_status[gp] == 3){
              genMuPlus.SetPtEtaPhiM(GenPart_pt[gp], GenPart_eta[gp], GenPart_phi[gp], GenPart_mass[gp]);
              momIdxPlus = GenPart_genPartIdxMother[gp];
              momPdgIdPlus = GenPart_pdgId[momIdxPlus];
-//             hGenPart_muMomPdgId->Fill(momPdgIdPlus);
            }
+           
            genDimuon = genMuMinus + genMuPlus;
            if(momPdgIdMinus == 23 && momPdgIdPlus==23){
              massDimuonGen = genDimuon.M();
@@ -481,41 +491,8 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
              hGenPart_dimuonMass->Fill(massDimuonGen);
            }
          }
-/*
-           if(GenPart_pdgId[gp] == 13 && GenPart_status[gp] == 1 && idxMuMinus < 0){
-              	 idxMuMinus = gp;
-           }
 
-           if(GenPart_pdgId[gp] == -13 && GenPart_status[gp] == 1 && idxMuPlus < 0){
 
-              idxMuPlus = gp;
-           }
-      }
-*/
-      //cout << 0 << endl;
-/*
-      if(idxMuMinus >= 0 && idxMuPlus >= 0){
-      //cout << 1 << endl;
-          TLorentzVector genMuMinus, genMuPlus, genDimuon;
-          genMuMinus.SetPtEtaPhiM(GenPart_pt[idxMuMinus], GenPart_eta[idxMuMinus], GenPart_phi[idxMuMinus], GenPart_mass[idxMuMinus]);
-          genMuPlus.SetPtEtaPhiM(GenPart_pt[idxMuPlus], GenPart_eta[idxMuPlus], GenPart_phi[idxMuPlus], GenPart_mass[idxMuPlus]);
-          genDimuon = genMuMinus + genMuPlus; 
-          double massDimuonGen = genDimuon.M();       
-          hGenPart_idxMother->Fill(GenPart_genPartIdxMother[idxMuMinus]);
-          hGenPart_idxMother->Fill(GenPart_genPartIdxMother[idxMuPlus]);
-          //cout << GenPart_genPartIdxMother[idxMuMinus] << endl;
-          //cout << GenPart_genPartIdxMother[idxMuPlus] << endl;
-          //cout << 2 << endl;
-          
-          int momIdxMinus = GenPart_genPartIdxMother[idxMuMinus];
-          int momIdxPlus = GenPart_genPartIdxMother[idxMuPlus];
-          
-          //cout << 3 << endl;
-          if(GenPart_pdgId[momIdxMinus] == 23 && GenPart_pdgId[momIdxPlus] == 23){
-          	hGenPart_dimuonMass->Fill(massDimuonGen);
-          }
-      }
-*/
    }
       ///////////////////////////////////////////////
       //saving all info in file
