@@ -19,6 +19,7 @@ else if(mode == "pre-cut"){
 }
 else{
 	std::cerr << "invalid option. use only 'cut' or 'pre-cut' \n";
+	return;
 }
 
 //TFile *f = TFile::Open("root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011A_SingleMu/94000E51-36DE-4AE5-939B-12EE231D9755.root");
@@ -261,7 +262,6 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       TH1F *hGenPart_ZMass = new TH1F("hGenPart_ZMass", "mass of gen particles with id = 23 and flag isLastCopy", 300, 0., 150.);
       TH1F *hGenPart_dimuonMass = new TH1F("hGenPart_dimuonMass", "mass of dimuon event of gen particles with id = 13 and id = -13 and flag isLastCopy", 300, 0., 150.);
       TH1F *hGenPart_muMomPdgId = new TH1F("hGenPart_muMomPdgId", "pdgId of muon mother particle - gen level", 3000, 0., 3000.);
-      
     ////////////////////////////////////////////////////////////////  
       // After creating all histograms, put them in a vector
       std::vector<TH1*> histos = {
@@ -373,7 +373,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
 	        const double dxy = 0.1;
 	        const double dz = 15;
 		const double met_pt = 35;
-           
+		
                 if (Muon_pt[0] <= ptCut || Muon_pt[1] <= ptCut) continue;
            
                 if (fabs(Muon_eta[0]) >= etaMax || fabs(Muon_eta[1]) >= etaMax) continue;
@@ -384,9 +384,9 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
            
                 if (fabs(Muon_dz[0]) >= dz || fabs(Muon_dz[1]) >= dz) continue;
            
-                if (fabs(cosDeltaPhi) >= 0.8) continue;
+                if (cosDeltaPhi >= -0.2 && cosDeltaPhi <= 0.9) continue; 
                 
-                if(MET_pt >= met_pt) continue;
+                if (MET_pt >= met_pt) continue;
            }
              
            
@@ -513,7 +513,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
            }
            
            genDimuon = genMuMinus + genMuPlus;
-           if(momPdgIdMinus == 23 && momPdgIdPlus==23){
+           if(momPdgIdMinus == 23 && momPdgIdPlus == 23){
              massDimuonGen = genDimuon.M();
              //cout << "massDimuonGen: " << massDimuonGen << endl;
              hGenPart_dimuonMass->Fill(massDimuonGen);
@@ -598,7 +598,6 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         hGenPart_ZMass->Write();
         hGenPart_dimuonMass->Write();
         hGenPart_muMomPdgId->Write();
-        
         ////////////////////////////////////////////////////////////////////
        /* Int_t bin1 = hMuon_deltaPhi->FindBin(2.0);
         Int_t bin2 = hMuon_deltaPhi->FindBin(4.0);
