@@ -10,9 +10,57 @@ std::string mode;
 std::cout << "enter your preference (cut or pre-cut): ";
 std::cin >> mode;
 
+std::string mc;
+bool isExperimental = false;
+
+std::cout << "is your data monte carlo, or experimental? [yes]/[no] only: ";
+std::cin >> mc;
+if (mc == "yes"){
+	isExperimental = true;
+} else if (mc == "no"){
+	isExperimental = false;
+} else{
+	std::cout << "invalid input";
+	return;
+}
+
+double ptCut      = 30.0;
+double etaCut     = 2.1;
+double isoCut     = 0.1;
+double dxyCut     = 0.1;
+double dzCut      = 15.0;
+double metCut     = 35.0;
+double cosCutLow  = -0.2;
+double cosCutHigh = 0.9;
+
 bool applyCuts = false;
 if(mode == "cut"){
 	applyCuts = true;
+	double ptCut, etaCut, isoCut, dxyCut, dzCut, metCut, cosCutLow, cosCutHigh;
+	
+	std::cout << "enter pt cut (default = 30): ";
+	std::cin >> ptCut;
+	
+	std::cout << "enter eta cut (default = 2.1): ";
+	std::cin >> etaCut;
+	
+	std::cout << "enter isolation cut (default = 0.1): ";
+	std::cin >> isoCut;
+	
+	std::cout << "enter dxy cut (default = 0.1): ";
+	std::cin >> dxyCut;
+	
+	std::cout << "enter dz cut (default = 15): ";
+	std::cin >> dzCut;
+	
+	std::cout << "enter MET pt cut (default = 35): ";
+	std::cin >> metCut;
+	
+	std::cout << "enter the lower cut of cos (default = -0.2): ";
+	std::cin >> cosCutLow;
+	
+	std::cout << "enter the lower cut of cos (default = 0.9): ";
+	std::cin >> cosCutHigh;	
 }
 else if(mode == "pre-cut"){
 	applyCuts = false;
@@ -22,29 +70,32 @@ else{
 	return;
 }
 
-//TFile *f = TFile::Open("root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011A_SingleMu/94000E51-36DE-4AE5-939B-12EE231D9755.root");
-//TTree *t1 = (TTree*)f->Get("Events");
-//t1->Print();
-//TFile *f = TFile::Open("/media/maia/NO_LABEL/data.root");
-//TTree *t1 = (TTree*)f->Get("Events");
+Int_t maxEntries;
+std::cout << "enter desired amount of entries (use -1 for entire population) \n";
+std::cin >> maxEntries;
 
-/*const char* fileNames[4] = {"root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011A_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011B_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2012B_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2012C_SingleMu_merged.root"};
+const int nFiles = 1;
 
+/*TFile *f = TFile::Open("root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011A_SingleMu/94000E51-36DE-4AE5-939B-12EE231D9755.root");
+TFile *f = TFile::Open("/media/maia/NO_LABEL/data.root");
+const char* fileNames[4] = {"root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011A_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011B_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2012B_SingleMu_merged.root", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2012C_SingleMu_merged.root"};
 const char* fileLabels[4] = {"Run2011A", "Run2011B", "Run2012B", "Run2012C"};
-*/
 
 const char* fileNames[1] = {"root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/MonteCarlo11_Summer11LegDR_DYJetsToLL_M-50_7TeV-madgraph-pythia6-tauola_merged.root"};
-
 const char* fileLabels[1] = {"drellYan"};
+*/
+
+const char* fileNames[nFiles] = {"root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011B_SingleMu_merged.root"};
+const char* fileLabels[nFiles] = {"Run2011A"};
 
 TFile *fout = nullptr;
 if(applyCuts){
-	fout = new TFile("my_histograms_cut.root", "RECREATE");
+	fout = new TFile("my_histograms_cut_experimental100k.root", "RECREATE");
 } else{
-	fout = new TFile("my_histograms_precut.root", "RECREATE");
+	fout = new TFile("my_histograms_precut_experimental100k.root", "RECREATE");
 }
 
-for (int fileIdx = 0; fileIdx < 1; fileIdx++){
+for (int fileIdx = 0; fileIdx < nFiles; fileIdx++){
     TString label = fileLabels[fileIdx];
     
     TChain *t1 = new TChain("Events");
@@ -255,7 +306,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
       
       ////////////////////////////////////////////////////////////////////////////////////////
       TH1F *hnGenPart = new TH1F ("hnGenPart", "number of gen particles in drell yan sim", 100, 0., 100.);
-      TH1F *hGenPart_mass = new TH1F ("hGenPart_mass", "mass of gen particles in GeV/c^{2}", 500., 0., 500.);
+      TH1F *hGenPart_mass = new TH1F ("hGenPart_mass", "mass of gen particles in GeV/c^{2}", 100., 0., 100.);
       TH1F *hGenPart_pt = new TH1F ("hGenPart_pt", "gen particles p_{t}", 200., 0., 200.);
       TH1F *hGenPart_phi = new TH1F ("hGenPart_phi", "#varphi of gen particles", 130, -6.5, 6.5);
       TH1F *hGenPart_eta = new TH1F ("hGenPart_eta", "#eta of gen particle events", 50, -2.5, 2.5);
@@ -277,33 +328,32 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
           hDimuon_mass, hDimuon_massVMuon_dxy,
           hMET_significanceVMET_phi, hMuon_deltaPhiVDimuon_mass,
           hDimuon_pt, hDimuon_pz, hDimuon_ptVDimuon_mass,
-          hDimuon_pzVDimuon_mass,
+          hDimuon_pzVDimuon_mass, hMET_ptVDimuon_mass
           hDimuon_transverseMass, hMuon_leadingPtVDimuon_mass, 
-          hDimuon_phi, hDimuon_cosDeltaPhiVDimuon_mass, hDimuon_deltaEta, 
-          hDimuon_etaPlusVetaMinus, hnGenPart, hGenPart_mass,
-          hGenPart_pt, hGenPart_phi, hGenPart_eta, hMuon_iso3, 
-          hMuon_iso4, hMuon_ptVMuon_eta, hDimuon_cosDeltaPhi, 
-          hMuon_iso3VDimuon_mass, hMuon_iso4VDimuon_mass, 
           hDimuon_rapidity, hMET_ptVDimuon_transverseMass, 
-          hGenPart_ZMass, hGenPart_dimuonMass, hGenPart_muMomPdgId,
-          hMET_ptVDimuon_mass
-	            
+          hDimuon_phi, hDimuon_cosDeltaPhiVDimuon_mass, hDimuon_deltaEta, 
+          hDimuon_etaPlusVetaMinus, hMuon_iso3, hMuon_iso4, 
+          hMuon_iso3VDimuon_mass, hMuon_iso4VDimuon_mass, 
+          hMuon_ptVMuon_eta, hDimuon_cosDeltaPhi, 
+          
+          hnGenPart, hGenPart_mass, hGenPart_pt, hGenPart_phi,
+          hGenPart_eta, hGenPart_ZMass, hGenPart_dimuonMass,
+          hGenPart_muMomPdgId            
       };
 
   
         for (auto* h : histos) h->SetDirectory(0);
-    
-    //////////////////////////////////////////////////////////////////
-    //Tcanvaces
 
-    //////////////////////////////////////////////////////////////////////
-    Int_t nentries = (Int_t)t1->GetEntries();
+    Int_t nentries = t1->GetEntries();
     cout << "Number of events in the file: " << nentries << endl;
     
-      
-     //for (int i = 0; i< nentries; i++){
-  
-      for (int i = 0; i<100000; i++){
+    Int_t entriesToRun = nentries;
+    if(maxEntries > 0 && maxEntries < nentries){
+    	entriesToRun = maxEntries;
+    }
+    cout << "entries to process: " << entriesToRun << endl;
+    for(Int_t i = 0; i < entriesToRun; i++){  
+    
       
       t1->GetEntry(i);
       bool isZpeak = false;
@@ -366,27 +416,20 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
            double dimuon_mt = TMath::Sqrt(2.0*Muon_pt[0]*Muon_pt[1]*(1-TMath::Cos(Muon_deltaPhi)));
            double dimuon_rapidity = dimuon.Rapidity();
            
-           if(applyCuts){
-           	const double ptCut = 30.0;
-	        const double etaMax = 2.1;
-	        const double isoCut = 0.1;
-	        const double dxy = 0.1;
-	        const double dz = 15;
-		const double met_pt = 35;
-		
+           if(applyCuts){		
                 if (Muon_pt[0] <= ptCut || Muon_pt[1] <= ptCut) continue;
            
-                if (fabs(Muon_eta[0]) >= etaMax || fabs(Muon_eta[1]) >= etaMax) continue;
+                if (fabs(Muon_eta[0]) >= etaCut || fabs(Muon_eta[1]) >= etaCut) continue;
            
                 if (Muon_pfRelIso04_all[0] > isoCut || Muon_pfRelIso04_all[1] > isoCut) continue;
            
-                if (fabs(Muon_dxy[0]) >= dxy || fabs(Muon_dxy[1]) >= dxy) continue;
+                if (fabs(Muon_dxy[0]) >= dxyCut || fabs(Muon_dxy[1]) >= dxyCut) continue;
            
-                if (fabs(Muon_dz[0]) >= dz || fabs(Muon_dz[1]) >= dz) continue;
+                if (fabs(Muon_dz[0]) >= dzCut || fabs(Muon_dz[1]) >= dzCut) continue;
            
-                if (cosDeltaPhi >= -0.2 && cosDeltaPhi <= 0.9) continue; 
+                if (cosDeltaPhi >= cosCutLow && cosDeltaPhi <= cosCutHigh) continue; 
                 
-                if (MET_pt >= met_pt) continue;
+                if (MET_pt >= metCut) continue;
            }
              
            
@@ -476,7 +519,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         
         }
         ///////////////////////////////////GEN ANALYSIS////////////////////////////////////////////////
-
+     if (!isExperimental){
         TLorentzVector genMuMinus, genMuPlus, genDimuon;
         double massDimuonGen = -99.;
         int momIdxMinus = -99;	//enumeration index in the event of the mother particle of mu-
@@ -519,6 +562,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
              hGenPart_dimuonMass->Fill(massDimuonGen);
            }
          }
+       }
    }
       ///////////////////////////////////////////////
       //saving all info in file
@@ -589,6 +633,8 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         hDimuon_rapidity->Write();
         hMET_ptVDimuon_transverseMass->Write();
         hMET_ptVDimuon_mass->Write();
+        
+      if(!isExperimental){
         fout->cd(label + "/genHist");
         hnGenPart->Write();
         hGenPart_mass->Write();
@@ -598,6 +644,7 @@ for (int fileIdx = 0; fileIdx < 1; fileIdx++){
         hGenPart_ZMass->Write();
         hGenPart_dimuonMass->Write();
         hGenPart_muMomPdgId->Write();
+      }
         ////////////////////////////////////////////////////////////////////
        /* Int_t bin1 = hMuon_deltaPhi->FindBin(2.0);
         Int_t bin2 = hMuon_deltaPhi->FindBin(4.0);
