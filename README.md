@@ -15,4 +15,3 @@ After your program is done complining, and you see an empty root prompt:
 root[2] 
 you need to paste in the line new TBrowser. This will allow you to see what your program has generated. All histograms will be available for you to see.
 The ones used in my project were the ones in folder finalHist and some from genHist (available only for DY MC). Browse through all of them, and if you feel like it, do a similar investigation by yourself.
-After all the hard work, you will start to understand how physicists get excited by numbers and histograms -_-
