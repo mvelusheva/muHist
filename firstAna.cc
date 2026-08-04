@@ -20,7 +20,7 @@ const char* mcFileNames[] = {"root://eospublic.cern.ch//eos/opendata/cms/derived
 const char* mcFileLabels[] = {"drellYan"};
 
 const char* expFileNames[] = {"root://eospublic.cern.ch//eos/opendata/cms/derived-data/NanoAODRun1/01-Jul-22/Run2011B_SingleMu_merged.root"};
-const char* expFileLabels[] = {"Run2011A"};
+const char* expFileLabels[] = {"Run2011B"};
 
 const char** fileNames = nullptr;
 const char** fileLabels = nullptr;
@@ -207,9 +207,9 @@ for (int fileIdx = 0; fileIdx < nFiles; fileIdx++){
       TH1F *hMuon_etaAll = new TH1F("hMuon_etaAll", "hMuon_etaAll", 200, -100., 100.);
       TH1F *hMuon_phi = new TH1F("hMuon_phi", "#varphi of #mu", 10, -5., 5.);
       TH1F *hMuon_mass = new TH1F("hMuon_mass", "hMuon_mass", 4, -2., 2.);
-      TH1F *hMuon_dxy = new TH1F("hMuon_dxy", "Muon dxy", 2, -1, 1);
-      TH1F *hMuon_dxyAll = new TH1F("hMuon_dxyAll", "dxy of all muons", 200, -100., 100.);
-      TH1F *hMuon_dz = new TH1F("hMuon_dz", "dz of all muons", 200, -100., 100.);
+      TH1F *hMuon_dxy = new TH1F("hMuon_dxy", "Muon dxy", 100, -5, 5);
+      TH1F *hMuon_dxyAll = new TH1F("hMuon_dxyAll", "dxy of all muons", 200, -10., 10.);
+      TH1F *hMuon_dz = new TH1F("hMuon_dz", "dz of all muons", 200, -50., 50.);
     
     /////////MET///////////////////////// 
       TH1F *hMET_pt = new TH1F("hMET_pt","MET p_{t}", 100, 0., 100.);
@@ -252,6 +252,10 @@ for (int fileIdx = 0; fileIdx < nFiles; fileIdx++){
       TH2F *hDimuon_massVMuon_dxy = new TH2F ("hDimuon_massVMuon_dxy", "dxy(#mu) vs dimuon mass", 300, 0., 150., 16, -4., 4.);
       hDimuon_massVMuon_dxy->SetYTitle("dxy(#mu) m");
       hDimuon_massVMuon_dxy->SetXTitle("dimuon mass GeV/c^{2}");
+      
+      TH2F *hDimuon_massVMuon_dz = new TH2F("hDimuon_massVMuon_dz", "Longitudinal impact parameter vs mass of di-muon events - DY MC", 300, 0., 150., 40, 0., 20.);
+      hDimuon_massVMuon_dz->SetYTitle("dz(#mu)");
+      hDimuon_massVMuon_dz->SetXTitle("mass(#mu#mu) [GeV/c^{2}]");
       
       TH2F *hMuon_deltaPhiVDimuon_mass = new TH2F ("Muon_deltaPhiVDimuon_mass", "dimuon mass vs #Delta#varphi(#mu#mu)", 130, -6.5, 6.5, 300, 0., 150.);
       hMuon_deltaPhiVDimuon_mass->SetYTitle("dimuon mass GeV/c^{2}");
@@ -458,6 +462,8 @@ for (int fileIdx = 0; fileIdx < nFiles; fileIdx++){
            hDimuon_mass->Fill(dimuon.M());
            hDimuon_massVMuon_dxy->Fill(dimuon.M(), Muon_dxy[0]);
            hDimuon_massVMuon_dxy->Fill(dimuon.M(), Muon_dxy[1]);
+           hDimuon_massVMuon_dz->Fill(dimuon.M(), Muon_dz[0]);
+           hDimuon_massVMuon_dz->Fill(dimuon.M(), Muon_dz[1]);
            hMuon_deltaPhiVDimuon_mass->Fill(Muon_deltaPhi, dimuon.M());
            hDimuon_pt->Fill(dimuon.Pt());
            hDimuon_pz->Fill(dimuon.Pz());
@@ -592,13 +598,13 @@ for (int fileIdx = 0; fileIdx < nFiles; fileIdx++){
 
         fout->cd(label + "/muHist");
         hnMuon->Write();
-        hMuon_dxy->Write();
         hMuon_charge->Write();
         hMuon_tightCharge->Write();
         hMuon_ptErr->Write();
         hMuon_phi->Write();
         hMuon_mass->Write();
-      
+        hMuon_dxyAll->Write();
+        
         fout->cd(label + "/METHist");
         hMET_pt->Write();
         hMET_phi->Write();
@@ -621,8 +627,6 @@ for (int fileIdx = 0; fileIdx < nFiles; fileIdx++){
         hMuon_ptVMuon_etaPlus->Write();
         hMuon_ptVMuon_etaMinus->Write();
         hnMuonVMuon_leadingPt->Write();
-        hDimuon_massVMuon_dxy->Write();
-        
         hMuon_deltaPhiVDimuon_mass->Write();
         hDimuon_pt->Write();
         hDimuon_pz->Write();
@@ -650,6 +654,10 @@ for (int fileIdx = 0; fileIdx < nFiles; fileIdx++){
         hDimuon_rapidity->Write();
         hMET_ptVDimuon_transverseMass->Write();
         hMET_ptVDimuon_mass->Write();
+        hMuon_dxy->Write();
+        hMuon_dz->Write();
+        hDimuon_massVMuon_dxy->Write();
+        hDimuon_massVMuon_dz->Write();
         
       if(!isExperimental){
         fout->cd(label + "/genHist");
