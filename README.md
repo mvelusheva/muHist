@@ -31,10 +31,15 @@ Now, after choosing your selections, exit your root session. Load the script aga
 Now, go to the genHist folder again. In order to get an explicit value for the Z-boson mass, you must fit those histograms with a Breit-Wigner function. Make sure that in your TBrowser, you have either histogram open. Then, paste in the code: 
 
 TF1 *bw = new TF1("bw", "[0]*[1]*[1]*[2]*[2]/((x*x - [1]*[1])*(x*x - [1]*[1]) + [1]*[1]*[2]*[2])", 60., 120.);
+
 bw->SetParNames("Norm", "Mass", "Width");
+
 bw->SetParameters(hGenPart_dimuonMass->GetMaximum(), 91., 2.5);
+
 hGenPart_dimuonMass->Sumw2();
+
 hGenPart_dimuonMass->Fit(bw, "R"," ", 60., 120.);
+
 gStyle->SetOptFit(1);
 	
 If you wish to place the same fit on a different histogram, in the last 3 lines of the code above, change the name of the histogram before you write them in root. 
@@ -53,10 +58,15 @@ Exit your root session, again, and load the script. This time:
 Go to the finalHist folder, and it is finally time to use the hDimuon_mass histograms. Make sure that in your TBrowser, this specific histogram is open, and paste in the code: 
 
 TF1 *voigtFit = new TF1("voigtFit", "[0]*TMath::Voigt(x - [1], [2], [3])", 60., 120.);
+
 voigtFit->SetParNames("Norm", "Mass", "Sigma", "Width");
+
 voigtFit->SetParameters(hDimuon_mass->GetMaximum(), 91., 2.5, 2.5);
+
 hDimuon_mass->Sumw2();
+
 hDimuon_mass->Fit(voigtFit, "R", " ", 60., 120.);
+
 gStyle->SetOptFit(1);
 
 You have now fitted your hDimuon_mass histogram with a Voigtian function, and you have gotten a final answer for the mass of the Z-boson!!!!!
