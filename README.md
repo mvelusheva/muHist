@@ -56,6 +56,7 @@ Now, as a bit of an exercise, load your DY MC data without selections, and take 
 - When that happens, right click, and from the menu that pops up, select LogX and LogY. You will get a very strange looking histogram, but don't worry, we want that to happen. 
 - Hover with your cursor on the X-axis, and wait until it becomes a little hand. Once that happens, in the menu, find SetRangeUser, and click on it. Write 1 and 100 in each box - we set the range of the X-axis as from 0.5 to 150. 
 - You will now see many different strange bumps, with the most prominent being at around 90. 
+
 My task for you is to search "Drell-Yan spectra" on Google. Looking at the Google results as reference, can you determine which bosons you can identify in your own histogram?
 
 (F. Takahashi et al. (Particle Data Group), to be published in Int. J. Mod. Phys. A41, 2630011 (2026))
